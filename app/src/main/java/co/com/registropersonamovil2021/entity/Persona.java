@@ -5,6 +5,8 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.io.Serializable;
+
 import co.com.registropersonamovil2021.persistencia.RoomConfig;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +15,7 @@ import lombok.Synchronized;
 @Data
 @Entity(tableName = RoomConfig.Tabla.PERSONA)
 @NoArgsConstructor
-public class Persona {
+public class Persona implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
     @NonNull

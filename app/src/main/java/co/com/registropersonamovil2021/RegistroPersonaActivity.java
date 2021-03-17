@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -20,6 +21,8 @@ import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RegistroPersonaActivity extends AppCompatActivity {
+
+
     @BindView(R.id.txt_documento)
     EditText txtDocumento;
 
@@ -36,7 +39,12 @@ public class RegistroPersonaActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registro_persona);
         ButterKnife.bind(this);
-        persona = new Persona();
+        persona=(Persona) getIntent().getSerializableExtra("persona");
+        if(persona!=null){
+            txtDocumento.setText(persona.getNumeroDocumentoIdentidad());
+            txtNombre.setText(persona.getNombrePersona());
+            txtApellido.setText(persona.getApellidoPersona());
+        }
         ActionBarUtil.getInstance(this, true).setToolBar(getString(R.string.registro_persona), getString(R.string.insertar));
     }
 
@@ -56,31 +64,82 @@ public class RegistroPersonaActivity extends AppCompatActivity {
 
 
     private void cargarInformacion() {
-        persona.setNumeroDocumentoIdentidad(txtDocumento.getText().toString());
-        persona.setNombrePersona(txtNombre.getText().toString());
-        persona.setApellidoPersona(txtApellido.getText().toString());
-        // se crea diálogo de confirmación
-        AlertDialog.Builder builder = new AlertDialog.Builder(RegistroPersonaActivity.this);
-        builder.setCancelable(false);
-        builder.setTitle(R.string.confirm);
-        builder.setMessage(R.string.confirm_message_guardar_informacion);
-        builder.setPositiveButton(R.string.confirm_action, (dialog, which) ->  insertarInformacion() );
-        builder.setNegativeButton(R.string.cancelar, (dialog, which) ->  dialog.cancel() );
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        if (persona!=null) {
 
-       // Forma legacy
+            persona.setNumeroDocumentoIdentidad(txtDocumento.getText().toString());
+            persona.setNombrePersona(txtNombre.getText().toString());
+            persona.setApellidoPersona(txtApellido.getText().toString());
+
+
+            if(persona.getApellidoPersona().equals("") || persona.getNombrePersona().equals("") || persona.getNumeroDocumentoIdentidad().equals("")){
+                Toast.makeText(getApplicationContext(),R.string.campo_vacio,Toast.LENGTH_LONG).show();
+            }
+            else{
+                AlertDialog.Builder builder = new AlertDialog.Builder(RegistroPersonaActivity.this);
+                builder.setCancelable(false);
+                builder.setTitle(R.string.confirm);
+                builder.setMessage(R.string.confirm_message_guardar_informacion);
+                builder.setPositiveButton(R.string.confirm_action, (dialog, which) ->  actualizarInformacion() );
+                builder.setNegativeButton(R.string.cancelar, (dialog, which) ->  dialog.cancel() );
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+
+        }
+
+        else{
+            Persona nuevaPersona=new Persona();
+            nuevaPersona.setNumeroDocumentoIdentidad(txtDocumento.getText().toString());
+            nuevaPersona.setNombrePersona(txtNombre.getText().toString());
+            nuevaPersona.setApellidoPersona(txtApellido.getText().toString());
+
+
+            if(nuevaPersona.getApellidoPersona().equals("") || nuevaPersona.getNombrePersona().equals("") || nuevaPersona.getNumeroDocumentoIdentidad().equals("")){
+                Toast.makeText(getApplicationContext(),R.string.campo_vacio,Toast.LENGTH_LONG).show();
+            }
+            else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(RegistroPersonaActivity.this);
+                builder.setCancelable(false);
+                builder.setTitle(R.string.confirm);
+                builder.setMessage(R.string.confirm_message_guardar_informacion);
+                builder.setPositiveButton(R.string.confirm_action, (dialog, which) -> insertarInformacion(nuevaPersona));
+                builder.setNegativeButton(R.string.cancelar, (dialog, which) -> dialog.cancel());
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+
+        }
+
+    }
+
+
+    // Forma legacy
         /*InsertarInformacion insertarInformacion = new InsertarInformacion();
         insertarInformacion.execute(persona);*/
-    }
+
     // avoid leak application
-    private void insertarInformacion() {
-        Observable.fromCallable(()-> {
-            Connection.getDb(getApplicationContext()).getPersonaDao().insert(persona);
+    private void insertarInformacion(Persona personaInsert) {
+        Observable.fromCallable(() -> {
+            Connection.getDb(getApplicationContext()).getPersonaDao().insert(personaInsert);
+            finish();
+            return personaInsert;
+        }).subscribeOn(Schedulers.computation()).subscribe();
+
+    }
+
+    private void actualizarInformacion(){
+        Observable.fromCallable(() -> {
+            Connection.getDb(getApplicationContext()).getPersonaDao().update(persona);
             finish();
             return persona;
         }).subscribeOn(Schedulers.computation()).subscribe();
+
     }
+
+
+
+
+
 
 
     @Override
@@ -103,6 +162,4 @@ public class RegistroPersonaActivity extends AppCompatActivity {
             super.onPostExecute(aVoid);
         }
     }*/
-
-
 }
