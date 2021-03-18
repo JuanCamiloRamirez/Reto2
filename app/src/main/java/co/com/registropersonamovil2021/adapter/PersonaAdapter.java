@@ -11,6 +11,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+
 import org.w3c.dom.Text;
 
 import java.io.Serializable;
@@ -18,6 +20,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import co.com.registropersonamovil2021.MainActivity;
 import co.com.registropersonamovil2021.R;
 import co.com.registropersonamovil2021.RegistroPersonaActivity;
 import co.com.registropersonamovil2021.entity.Persona;
@@ -70,11 +73,17 @@ public class PersonaAdapter extends BaseAdapter {
         holder.eliminarButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Connection.getDb(finalConvertView.getContext()).getPersonaDao().delete(persona);
-                //Toast.makeText(context.getApplicationContext(), persona.getNombrePersona(),Toast.LENGTH_LONG).show();
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setCancelable(false);
+                builder.setTitle(R.string.confirm);
+                builder.setMessage(R.string.confirm_message_eliminar_usuario);
+                builder.setPositiveButton(R.string.confirm_action, (dialog, which) -> eliminarUsuario(finalConvertView,persona)   );
+                builder.setNegativeButton(R.string.cancelar, (dialog, which) ->  dialog.cancel() );
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
-
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -83,10 +92,16 @@ public class PersonaAdapter extends BaseAdapter {
                 context.startActivity(intent);
             }
         });
-
         return convertView;
     }
 
+    public void eliminarUsuario(View view,Persona persona ){
+        Connection.getDb(view.getContext()).getPersonaDao().delete(persona);
+        //Toast.makeText(context.getApplicationContext(), persona.getNombrePersona(),Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(context, MainActivity.class);
+        context.startActivity(intent);
+        //notifyDataSetInvalidated();
+    }
 
     class ViewHolder {
         @BindView(R.id.txtNumeroDocumento)
